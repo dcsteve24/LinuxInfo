@@ -1,0 +1,80 @@
+REALMS
+
+auth
+The 'auth' realm (I call it a realm - the docs refer to it as a
+'management group' or 'facility') is responsible for checking that
+the user is who they say. The modules that can be listed in this
+area generally support prompting for a password.
+
+account
+This area is responsible for a wide array of possible account
+verification functionality. There are many modules available for
+this facility. Constraints to the use of a service based on checking
+group membership, time of day, whether a user account is local or
+remote, etc., are generally enforced by modules which support this
+facility.
+
+password
+The modules in this area are responsible for any functionality
+needed in the course of updating passwords for a given service. Most
+of the time, this section is pretty 'ho-hum', simply calling a
+module that will prompt for a current password, and, assuming that's
+successful, prompt you for a new one. Other modules could be added
+to perform password complexity or dictionary checking as well, such
+as that performed by the pam_cracklib and pam_pwcheck modules.
+
+session
+Modules in this area perform any number of things that happen
+either during the setup or cleanup of a service for a given user.
+This may include any number of things; launching a system-wide
+initialization script, performing special logging, mounting the
+user's home directory, or setting resource limits.
+
+
+CONTROLS
+
+required
+If a 'required' module returns a status that is not 'success',
+the operation will ultimately fail, but only after the modules below
+it are invoked. This seems senseless at first glance I suppose, but
+it serves the purpose of always acting the same way from the point
+of view of the user trying to utilize the service. The net effect is
+that it becomes impossible for a potential cracker to determine
+which module caused the failure - and the less information a
+malicious user has about your system, the better. Important to note
+is that even if all of the modules in the stack succeed, failure of
+one 'required' module means the operation will ultimately fail. Of
+course, if a required module succeeds, the operation can still fail
+if a 'required' module later in the stack fails.
+
+requisite
+If a 'requisite' module fails, the operation not only fails, but
+the operation is immediately terminated with a failure without
+invoking any other modules: 'do not pass go, do not collect $200',
+so to speak.
+
+sufficient
+If a sufficient module succeeds, it is enough to satisfy the
+requirements of sufficient modules in that realm for use of the
+service, and modules below it that are also listed as 'sufficient'
+are not invoked. If it fails, the operation fails unless a module
+invoked after it succeeds. Important to note is that if a 'required'
+module fails before a 'sufficient' one succeeds, the operation will
+fail anyway, ignoring the status of any 'sufficient' modules.
+
+optional
+An 'optional' module, according to the pam(8) manpage, will only
+cause an operation to fail if it's the only module in the stack for
+that facility
+
+
+
+Success Lines:
+[success = #] means that a success will skip the next # lines.
+For example:
+- pam_unix.so with success =2
+- pam_sss.so with success =1
+- pam_deny.so
+
+A success with pam_unix.so (shadow file) means it skips the next two lines (sssd and deny)
+A success with pam_sss.so (sssd) means it skips the next line (deny).
