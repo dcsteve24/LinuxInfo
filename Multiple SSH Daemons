@@ -1,0 +1,23 @@
+This allows for multiple SSH servers to be running at the same time. Useful if you need different settings or controls set for different ports.
+
+1. copy the original sshd config
+  cp /etc/ssh/sshd_config /etc/ssh/<new name>
+
+2. Edit the new config and change/add Port ## to it -- making ## the desired Port; i.e. Port 2222
+
+3. Make a copy of the systemd file
+  cp /lib/systemd/system/ssh.service /lib/systemd/system/<name>.service
+
+4. In that new file from step 3 -- change the line following lines:
+    Original:
+      - ExecStart=/usr/sbin/sshd -D $SSHD_OPTS
+      - Alias=sshd.service
+    Change to:
+      - ExecStart=/usr/sbin/sshd -D $SSHD_OPTS -f /etc/ssh/<name from step 1>
+      - Alias=<name from step 3>.service
+
+5. Enable the service:
+  systemctl enable <name from step 3>.service
+
+6. Start the service:
+  service <name from step 3> start
